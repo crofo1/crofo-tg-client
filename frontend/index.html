@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROFO Telegram Client (Super-Secret Edition)</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Custom Script -->
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <div id="app-container">
+        
+        <!-- ================= AUTH SCREEN ================= -->
+        <div id="auth-screen" class="screen hidden">
+            <div class="auth-card glass-panel">
+                <div class="brand">
+                    <div class="logo-orb pulse-glow">
+                        <i class="fa-brands fa-telegram"></i>
+                    </div>
+                    <h1>CROFO client</h1>
+                    <p>Xavfsiz va Kengaytirilgan Telegram Mijozi</p>
+                </div>
+                
+                <!-- Phone input step -->
+                <div id="auth-step-phone" class="auth-step">
+                    <label for="phone-input">Telefon raqamingiz</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="text" id="phone-input" placeholder="+998901234567">
+                    </div>
+                    <button id="btn-send-code" class="btn-primary">
+                        <span>Kodni yuborish</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                
+                <!-- Code input step -->
+                <div id="auth-step-code" class="auth-step hidden">
+                    <label for="code-input">Telegram orqali kelgan kod</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="text" id="code-input" placeholder="12345">
+                    </div>
+                    <button id="btn-verify-code" class="btn-primary">
+                        <span>Tasdiqlash</span>
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                    <button id="btn-back-phone" class="btn-link">Raqamni o'zgartirish</button>
+                </div>
+                
+                <!-- 2FA Password input step -->
+                <div id="auth-step-password" class="auth-step hidden">
+                    <label for="password-input">2-Bosqichli parolingiz (2FA)</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password-input" placeholder="Parol">
+                    </div>
+                    <button id="btn-verify-password" class="btn-primary">
+                        <span>Kirish</span>
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                    </button>
+                </div>
+
+                <div id="auth-status-msg" class="status-msg"></div>
+            </div>
+        </div>
+
+        <!-- ================= MAIN APP SCREEN ================= -->
+        <div id="main-screen" class="screen">
+            <!-- Sidebar (Chats) -->
+            <aside class="sidebar glass-panel">
+                <div class="sidebar-header">
+                    <div class="user-profile">
+                        <div class="avatar" id="my-avatar">C</div>
+                        <div class="user-info">
+                            <h3 id="my-name">Yuklanmoqda...</h3>
+                            <span id="my-status" class="online-indicator">Online</span>
+                        </div>
+                    </div>
+                    <button id="btn-open-settings" title="Sozlamalar">
+                        <i class="fa-solid fa-sliders"></i>
+                    </button>
+                </div>
+
+                <div class="search-bar-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Qidirish...">
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">Barchasi</button>
+                    <button class="filter-tab" data-filter="user">Muloqotlar</button>
+                    <button class="filter-tab" data-filter="group">Guruhlar</button>
+                    <button class="filter-tab" data-filter="channel">Kanallar</button>
+                </div>
+
+                <div class="chats-list" id="chats-container">
+                    <!-- Chats injected dynamically -->
+                    <div class="loading-spinner">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Chatlar yuklanmoqda...</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Chat Room -->
+            <main class="chat-room glass-panel">
+                <!-- Chat Welcome / Empty State -->
+                <div id="chat-empty-state" class="empty-state">
+                    <div class="orb-container">
+                        <div class="orb-ring ring-1"></div>
+                        <div class="orb-ring ring-2"></div>
+                        <div class="orb-ring ring-3"></div>
+                        <div class="central-orb glow-cyan">
+                            <i class="fa-brands fa-telegram"></i>
+                        </div>
+                    </div>
+                    <h2>CROFO Telegram Client</h2>
+                    <p>Boshlash uchun chap paneldan chatni tanlang</p>
+                    <p class="subtitle">Anti-Delete, Ghost Mode va AES-256 shifrlangan secret chatlar faollashtirilgan</p>
+                </div>
+
+                <!-- Active Chat Room Content -->
+                <div id="chat-active-state" class="chat-active-wrapper hidden">
+                    <!-- Chat Header -->
+                    <header class="chat-header">
+                        <div class="chat-title-details">
+                            <div class="avatar header-avatar" id="active-chat-avatar">U</div>
+                            <div>
+                                <h2 id="active-chat-title">Muloqot</h2>
+                                <span id="active-chat-type" class="chat-badge">User</span>
+                            </div>
+                        </div>
+                        
+                        <div class="header-actions">
+                            <!-- Crypto Chat Toggle -->
+                            <button id="btn-toggle-crypto" class="header-action-btn" title="Crypto Chat">
+                                <i class="fa-solid fa-lock"></i>
+                                <span id="crypto-status-text">Secret Chat: OFF</span>
+                            </button>
+                            <!-- Connection indicators -->
+                            <div class="indicator-group">
+                                <span class="badge ghost-badge hidden" id="ghost-indicator"><i class="fa-solid fa-ghost"></i> Ghost</span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Crypto Password Configuration Bar -->
+                    <div id="crypto-config-bar" class="crypto-config-bar hidden">
+                        <div class="config-inner">
+                            <i class="fa-solid fa-shield-halved security-icon"></i>
+                            <span>Ushbu chat uchun shifrlash parolini kiriting (AES-256):</span>
+                            <div class="crypto-input-group">
+                                <input type="password" id="crypto-key-input" placeholder="Parol kiriting...">
+                                <button id="btn-save-crypto-key" class="btn-small">Saqlash</button>
+                                <button id="btn-clear-crypto-key" class="btn-small btn-danger">O'chirish</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages Feed -->
+                    <div class="messages-feed" id="messages-container">
+                        <!-- Messages injected dynamically -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <footer class="chat-input-area">
+                        <div class="crypto-send-status hidden" id="crypto-send-indicator">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span>Xabar shifrlanib yuboriladi (AES-256)</span>
+                        </div>
+                        <div class="input-form">
+                            <input type="text" id="message-input" placeholder="Xabar yozing...">
+                            <button id="btn-send-msg">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </footer>
+                </div>
+            </main>
+        </div>
+
+        <!-- ================= SETTINGS DRAWER / MODAL ================= -->
+        <div id="settings-drawer" class="drawer hidden">
+            <div class="drawer-content glass-panel">
+                <div class="drawer-header">
+                    <h2><i class="fa-solid fa-sliders"></i> Tizim Sozlamalari</h2>
+                    <button id="btn-close-settings" class="btn-close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="drawer-body">
+                    <!-- Section 1: Ghost Mode -->
+                    <div class="settings-section">
+                        <h3><i class="fa-solid fa-ghost"></i> Ghost Mode (Yashirin Rejim)</h3>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <strong>Silent Read</strong>
+                                <p>Xabarlarni o'qiganda "o'qildi" deb belgilamaslik</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="setting-silent-read">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <strong>Typing Hide</strong>
+                                <p>Xabar yozayotganda "yozmoqda..." holatini uzatmaslik</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="setting-typing-hide">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Smart Spy -->
+                    <div class="settings-section">
+                        <h3><i class="fa-solid fa-eye"></i> Smart Channel Spy (Kanal Snayper)</h3>
+                        <p class="section-desc">Kuzatilayotgan kanallardagi yangi postlarda kalit so'zlar topilsa, sizga xabar beradi.</p>
+                        
+                        <div class="form-group">
+                            <label for="spy-channels-input">Kuzatiladigan kanallar (username yoki IDlar, vergul bilan ajratilgan)</label>
+                            <input type="text" id="spy-channels-input" placeholder="channel_username, -100123456789">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spy-keywords-input">Kuzatiladigan kalit so'zlar (vergul bilan ajratilgan)</label>
+                            <input type="text" id="spy-keywords-input" placeholder="loyiha, dollar, crypto, ish">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="spy-alert-chat-input">Ogohlantirish yuboriladigan chat</label>
+                            <input type="text" id="spy-alert-chat-input" placeholder="me (Yozishmalarim)">
+                        </div>
+
+                        <button id="btn-save-spy" class="btn-secondary">Kanal Snayperni saqlash</button>
+                    </div>
+
+                    <!-- Section 3: App info -->
+                    <div class="settings-section app-info">
+                        <h3>CROFO Client haqida</h3>
+                        <p>Nashr: 1.0.0 (Super-Secret Edition)</p>
+                        <p>Ishlab chiquvchi: Antigravity AI</p>
+                        <button id="btn-logout" class="btn-danger-outline">Akkauntdan chiqish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= EDIT HISTORY MODAL ================= -->
+        <div id="history-modal" class="modal hidden">
+            <div class="modal-content glass-panel">
+                <div class="modal-header">
+                    <h3><i class="fa-solid fa-history"></i> Xabar tahrirlash tarixi</h3>
+                    <button id="btn-close-modal" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body" id="history-modal-body">
+                    <!-- History list injected dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SPY NOTIFICATION BANNER ================= -->
+        <div id="notification-banner" class="notification-banner hidden">
+            <div class="banner-content">
+                <i class="fa-solid fa-bell bell-icon"></i>
+                <div class="notification-text">
+                    <strong id="notif-title">SPY ALERT!</strong>
+                    <p id="notif-body">Matn...</p>
+                </div>
+                <button id="btn-close-notif" class="btn-close-notif"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
